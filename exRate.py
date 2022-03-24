@@ -14,6 +14,7 @@ import openpyxl as opx
 urlpage = 'https://fx.sauder.ubc.ca/today.html'
 filename = 'dailyrate.xlsx'
 Todaytime = time.strftime("%Y-%m-%d",time.localtime(time.time()))
+ratetype='SP'
 # 获取网页内容，把 HTML 数据保存在 page 变量中
 page = urllib.request.urlopen(urlpage)
 
@@ -25,14 +26,17 @@ soup = BeautifulSoup(page, 'html.parser')
 table = soup.find('table', attrs={'class': 'fxt'})
 results = table.find_all('tr')
 print('Number of results', len(results))
-# 创建一个列表对象，并且把表头数据作为列表的第一个元素
+
+
+# 创建一个列表对象，并且把表头数据作为列表的第一个元素.并且判断数据表格是否已经生成，如果已经生成，便不会再添加了。
+
 rows = []
 path=sys.path[0]
 print(path,filename)
 cfile=func.CheckFile(path,filename)
 
 if cfile == False:
-    rows.append(['Date','Code','Currency','fcu/CAD','CAD/fcu',
+    rows.append(['Date','Code','Currency','Type','fcu/CAD','CAD/fcu',
             'fcu/USD','USD/fcu','fcu/EUR','EUR/fcu']
              )
 
@@ -54,21 +58,27 @@ for result in results:
     fcueur = data[6].getText()
     eurfcu = data[7].getText()
     if CurrencyCode == 'USD':
-            rows.append([Todaytime,CurrencyCode,CurrencyName,fcucad,cadfcu,fcuusd,usdfcu,fcueur,eurfcu])
+            rows.append([Todaytime,CurrencyCode,CurrencyName,ratetype,fcucad,cadfcu,fcuusd,usdfcu,fcueur,eurfcu])
     elif CurrencyCode == 'CAD':
-        rows.append([Todaytime,CurrencyCode,CurrencyName,fcucad,cadfcu,fcuusd,usdfcu,fcueur,eurfcu])
+        rows.append([Todaytime,CurrencyCode,CurrencyName,ratetype,fcucad,cadfcu,fcuusd,usdfcu,fcueur,eurfcu])
 
 print(rows)
-
+datafile = path+r"\\"+filename
 if cfile == False:
     wb = opx.Workbook()
-    wb = opx.Workbook(r'D:\test\ExRate\dailyrate.xlsx')
+    wb = opx.Workbook(datafile)
     ws1 = wb.create_sheet("Sheet1", 0)
 else:
-    wb = opx.load_workbook(r'D:\test\ExRate\dailyrate.xlsx')
+    wb = opx.load_workbook(datafile)
     ws1 = wb.active
     ws1 = wb['Sheet1']
-
-for row in rows:
-        ws1.append(row)
-wb.save(r'D:\test\ExRate\dailyrate.xlsx')
+#判断，最后的时间记录，如果已经存在，便不进行更新。
+maxrows=ws1.max_row
+res1=ws1.cell(row=maxrows,column=1).value
+if res1 == Todaytime:
+    print('You already downloaded todays exchange rate, the sofaware will closed')
+    
+else:        
+    for row in rows:
+            ws1.append(row)
+    wb.save(datafile)
