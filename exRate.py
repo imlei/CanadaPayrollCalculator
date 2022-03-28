@@ -2,8 +2,6 @@ from ast import While
 from datetime import date
 from bs4 import BeautifulSoup
 import urllib.request
-import csv
-import time
 import os
 import sys
 from funcfile import func
@@ -13,7 +11,7 @@ import openpyxl as opx
 # 把网址 URL 存在变量里
 urlpage = 'https://fx.sauder.ubc.ca/today.html'
 filename = 'dailyrate.xlsx'
-Todaytime = time.strftime("%Y-%m-%d",time.localtime(time.time()))
+#Todaytime = time.strftime("%Y-%m-%d",time.localtime(time.time()))
 ratetype='SP'
 # 获取网页内容，把 HTML 数据保存在 page 变量中
 page = urllib.request.urlopen(urlpage)
@@ -22,10 +20,22 @@ page = urllib.request.urlopen(urlpage)
 # 并保存在 soup 变量里
 soup = BeautifulSoup(page, 'html.parser')
 
+#寻找日期
+
+table1 = soup.findAll('table')
+spantext = str(soup.find('span'))
+beginstr=spantext.find('Rates:')+6
+endingstr=spantext.find('</span>')
+
+StrToday=spantext[beginstr:endingstr]
+StrDate=StrToday.split(',')
+Todaytime=StrDate[1]+','+StrDate[2]
+
+
 # 在表格中查找数据
 table = soup.find('table', attrs={'class': 'fxt'})
 results = table.find_all('tr')
-print('Number of results', len(results))
+
 
 
 # 创建一个列表对象，并且把表头数据作为列表的第一个元素.并且判断数据表格是否已经生成，如果已经生成，便不会再添加了。
